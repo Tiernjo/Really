@@ -1,5 +1,0 @@
-extern mod rsfml;
-
-fn main() {
-	println!("yolo");
-}
