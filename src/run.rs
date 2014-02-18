@@ -1,49 +1,44 @@
-use rsfml::graphics::{Color,IntRect,Texture,Vertex,VertexArray};
-use rsfml::graphics::rc::Sprite;
-use rsfml::system::{Vector2f,Vector2u};
-use std::cell::RefCell;
-use std::rc::Rc;
+use rsfml::graphics::{Color,Quads,RenderStates,Texture,Vertex,VertexArray};
+use rsfml::system::Vector2f;
 mod window;
 
-struct MultiSprite {
-	top_left:Sprite,
-	top_mid:Sprite,
-	top_right:Sprite,
-}	
+fn test_vertex(win_size:Vector2f,texture_size:Vector2f) -> VertexArray {
+	let mut test = VertexArray::new().expect("blip");
+	test.set_primitive_type(Quads);
+	let mut i:uint = 0; let mut j:uint = 0;
+	
+	while i < win_size.x as uint {
+		while j < win_size.y as uint {
+			// VertexArray Position
+			let top_left = &Vector2f::new(i as f32 * texture_size.x,j as f32 * texture_size.y);let top_right = &Vector2f::new((i as f32 + 1.0) * texture_size.x,j as f32 * texture_size.y);
+			let bot_left = &Vector2f::new(i as f32 * 64.0,(j as f32 + 1.0) * texture_size.x);let bot_right = &Vector2f::new((i as f32 + 1.0) * texture_size.x,(j as f32 + 1.0) * 64.0);
 
-impl MultiSprite {
-	fn new() -> MultiSprite {
-		let texture: Rc<RefCell<Texture>> = match Texture::new_from_file("../img/tiles.png"){
-			Some(texture)	=>	Rc::new(RefCell::new(texture)),
-			None()			=>	fail!(~"tex of MultiSprite")
-		};
-		let tl_bounds = IntRect::new(128,0,64,64);
-		let tm_bounds = IntRect::new(0,0,64,64);
-		let tr_bounds = IntRect::new(64,0,64,64);
-		let mut tl = Sprite::new_with_texture(texture.clone()).expect("tl");
-		let mut tm = Sprite::new_with_texture(texture.clone()).expect("mid");
-		let mut tr = Sprite::new_with_texture(texture.clone()).expect("tr");
-		tl.set_texture_rect(&tl_bounds);
-		tm.set_texture_rect(&tm_bounds);
-		tr.set_texture_rect(&tr_bounds);
-		MultiSprite{
-			top_left:tl,
-			top_mid:tm,
-			top_right:tr,
+			test.append(&Vertex::new_with_pos_coords(top_left,&Vector2f::new(0.0,0.0)));
+			test.append(&Vertex::new_with_pos_coords(top_right,&Vector2f::new(64.0,0.0)));
+			test.append(&Vertex::new_with_pos_coords(bot_right,&Vector2f::new(64.0,64.0)));
+			test.append(&Vertex::new_with_pos_coords(bot_left,&Vector2f::new(0.0,64.0)));
+			j += 1;
 		}
+		j = 0;
+		i += 1;
 	}
+	test
 }
 
 pub fn test_game() {
 	let main_win = &mut window::new(512,256);
-	let mut test = MultiSprite::new();
-	test.top_mid.set_position(&Vector2f::new(64.0,0.0));
-	test.top_right.set_position(&Vector2f::new(128.0,0.0));
+	let texture_size = Vector2f::new(64.0,64.0);
+	let win_size = Vector2f::new(8.0,4.0);
+	let test = test_vertex(win_size,texture_size);
+	let m_texture = Texture::new_from_file("../img/tiles.png").expect("texture");
+	let mut m_ren_state = RenderStates::default();
+	m_ren_state.texture = Some(&m_texture);
+
 	while main_win.is_open() {
 		window::check_close(main_win);
 
 		main_win.clear(&Color::black());
-		main_win.draw(&test.top_left);main_win.draw(&test.top_mid);main_win.draw(&test.top_right);
+		main_win.draw_with_renderstates(&test, &mut m_ren_state);
 		main_win.display()
 	}
 }

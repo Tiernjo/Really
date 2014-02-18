@@ -1,4 +1,3 @@
-extern mod rsfml;
 use rsfml::graphics::{RenderWindow};
 use rsfml::window::{Close,ContextSettings,event,VideoMode};
 
